@@ -178,7 +178,7 @@ class neuron:
             config = config,
             wallet = self.wallet,
             netuid = self.config.netuid,
-            port = config.prometheus.port if config.axon.port == bittensor.defaults.axon.port else config.axon.port - 1000
+            port = config.prometheus.port if not config.is_set('axon.port') else config.axon.port - 1000
         )
 
         # Verify subnet exists
