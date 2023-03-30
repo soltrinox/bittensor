@@ -8,7 +8,7 @@ wallet = bittensor.wallet(name='prompting_testing', hotkey='default')
 # Create a local endpoint receptor grpc connection.
 local_endpoint = bittensor.endpoint(
     version=bittensor.__version_as_int__,
-    uid=2,
+    uid=0,
     ip="127.0.0.1",
     ip_type=4,
     port=8091,

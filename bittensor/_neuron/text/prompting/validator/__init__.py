@@ -73,21 +73,21 @@ class neuron:
             logprobs = self.config.nucleus.logprobs,
             repetition_penalty = self.config.nucleus.repetition_penalty
         )
-        self.reward_model = GPTRewardModel('Dahoas/gptj-rm-IHP', 'EleutherAI/gpt-j-6B')
+        self.reward_model = GPTRewardModel('Dahoas/gpt2-rm-static', 'EleutherAI/gpt-j-6B')
         self.reward_model.to(self.device)
-        self.modules = [ bittensor.text_prompting( endpoint = endpoint, wallet = self.wallet ) for endpoint in self.metagraph.endpoints_objs ]
+        self.modules = [ bittensor.text_prompting( endpoint = endpoint, wallet = self.wallet ) for endpoint in self.metagraph.endpoint_objs ]
 
     def run(self):
         while True:
 
             # Query the uid endpoint.
             async def call_uid( uid: int, user_message: str ) -> str:
-                endpoint = self.metagraph.endpoints_objs[uid]
-                if endpoint.ip == "0.0.0.0" and endpoint.uid != 2: continue
-                if endpoint.uid == 2:
+                endpoint = self.metagraph.endpoint_objs[uid]
+                if endpoint.ip == "0.0.0.0" and endpoint.uid != 0: pass
+                if endpoint.uid == 0:
                     endpoint = bittensor.endpoint(
                         version=bittensor.__version_as_int__,
-                        uid=2,
+                        uid=0,
                         ip="127.0.0.1",
                         ip_type=4,
                         port=8091,
@@ -95,28 +95,32 @@ class neuron:
                         coldkey=self.wallet.coldkeypub.ss58_address,
                         modality=0,
                     )
-                module = bittensor.text_prompting( endpoint = endpoint, wallet = self.wallet ) 
-                return await module.async_forward( roles = ['user'], messages = [user_message], timeout=12 ).response
+                module = bittensor.text_prompting( endpoint = endpoint, wallet = self.wallet )
+                response = await module.async_forward(roles=['user'], messages=[user_message], timeout=12)
+                return response.response
             
             # Async call the uids.
             async def query( user_message: str ):
                 coroutines = []
                 for uid in self.metagraph.uids.tolist():
                     coroutines.append( call_uid( uid, user_message ) )
-                await asyncio.gather(*coroutines)
-
+                    
+                all_responses = await asyncio.gather(*coroutines)
+                return all_responses
             # Make queries
             user_message = input("User> ")
             responses_per_uid = asyncio.run(query(user_message))
 
             # Get the highest value response
             max_reward: float = -math.inf
-            max_response:str = ""
+            max_response: str = ""
             for uid, response in enumerate( responses_per_uid ):
-                reward = self.reward_fn([response])
-                if reward > max_reward:
-                    max_reward = reward
-                    max_response = response
+                if response:
+                    reward = self.reward_fn([response])
+                    print(f"UID: {uid} | Reward: {reward} | Response: {response}")
+                    if reward > max_reward:
+                        max_reward = reward
+                        max_response = response
 
             print("Bot> ", max_response)
             
