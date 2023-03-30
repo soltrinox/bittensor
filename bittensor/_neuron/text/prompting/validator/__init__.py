@@ -3,31 +3,36 @@ from torch import nn
 import os
 import sys
 
-import bittensor
+import bittensor as bt
 import argparse
 import asyncio
 import math
 import re
 import json
 
+from fastapi import WebSocket
+
 from typing import List, Tuple
 
-from bittensor._neuron.text.prompting.validator.model_impl import PromptingValidator
+from .model_impl import PromptingValidator
 from .reward_impl import GPTRewardModel
+
+
+
 
 class neuron:
     @classmethod
-    def check_config( cls, config: 'bittensor.Config' ):
+    def check_config( cls, config: 'bt.Config' ):
         r""" Checks/validates the config namespace object.
         """
         PromptingValidator.check_config( config )
-        bittensor.logging.check_config( config )
-        bittensor.wallet.check_config( config )
-        bittensor.subtensor.check_config( config )
-        bittensor.metagraph.check_config( config )
-        bittensor.dataset.check_config( config )
-        bittensor.wandb.check_config( config )
-        bittensor.prometheus.check_config( config )
+        bt.logging.check_config( config )
+        bt.wallet.check_config( config )
+        bt.subtensor.check_config( config )
+        bt.metagraph.check_config( config )
+        bt.dataset.check_config( config )
+        bt.wandb.check_config( config )
+        bt.prometheus.check_config( config )
         full_path = os.path.expanduser('{}/{}/{}/netuid{}/{}'.format( config.logging.logging_dir, config.wallet.name, config.wallet.hotkey, config.netuid, config.neuron.name ))
         config.neuron.full_path = os.path.expanduser(full_path)
         config.using_wandb = config.wandb.api_key != 'default'
@@ -44,21 +49,22 @@ class neuron:
         parser = argparse.ArgumentParser()    
         cls.add_args( parser )
         PromptingValidator.add_args( parser )    
-        bittensor.wallet.add_args( parser )
-        bittensor.subtensor.add_args( parser )
-        bittensor.metagraph.add_args( parser )
-        bittensor.logging.add_args( parser )
-        bittensor.dataset.add_args( parser )
-        bittensor.wandb.add_args(parser)
-        bittensor.prometheus.add_args( parser )
-        return bittensor.config( parser )
+        bt.wallet.add_args( parser )
+        bt.subtensor.add_args( parser )
+        bt.metagraph.add_args( parser )
+        bt.logging.add_args( parser )
+        bt.dataset.add_args( parser )
+        bt.wandb.add_args(parser)
+        bt.prometheus.add_args( parser )
+        return bt.config( parser )
     
-    def __init__( self ):
-        self.config = neuron.config()
-        self.subtensor = bittensor.subtensor ( config = self.config )
+    def __init__( self, config ):
+        self.config = config if config is not None else neuron.config()
+        self.subtensor = bt.subtensor ( chain_endpoint='wss://test.finney.opentensor.ai', network="finney" )
+
         self.messages = []
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.wallet = bittensor.wallet ( config = self.config )
+        self.wallet = bt.wallet ( config = self.config )
         self.metagraph = self.subtensor.metagraph(11)
         self.wallet.create_if_non_existent()
         self.wallet.reregister( subtensor = self.subtensor, netuid = self.config.netuid )
@@ -75,7 +81,33 @@ class neuron:
         )
         self.reward_model = GPTRewardModel('Dahoas/gpt2-rm-static', 'EleutherAI/gpt-j-6B')
         self.reward_model.to(self.device)
-        self.modules = [ bittensor.text_prompting( endpoint = endpoint, wallet = self.wallet ) for endpoint in self.metagraph.endpoint_objs ]
+        self.modules = [ bt.text_prompting( endpoint = endpoint, wallet = self.wallet ) for endpoint in self.metagraph.endpoint_objs ]
+
+    async def query(self, user_message: str):
+        coroutines = []
+        for uid in self.metagraph.uids.tolist():
+            coroutines.append(self.call_uid(uid, user_message))
+
+        all_responses = await asyncio.gather(*coroutines)
+        return all_responses
+    
+    async def call_uid(self, uid: int, user_message: str) -> str:
+        endpoint = self.metagraph.endpoint_objs[uid]
+        if endpoint.ip == "0.0.0.0" and endpoint.uid != 0: pass
+        if endpoint.uid == 0:
+            endpoint = bt.endpoint(
+                version=bt.__version_as_int__,
+                uid=0,
+                ip="127.0.0.1",
+                ip_type=4,
+                port=8091,
+                hotkey=self.wallet.hotkey.ss58_address,
+                coldkey=self.wallet.coldkeypub.ss58_address,
+                modality=0,
+            )
+        module = bt.text_prompting(endpoint=endpoint, wallet=self.wallet)
+        response = await module.async_forward(roles=['user'], messages=[user_message], timeout=12)
+        return response.response
 
     def run(self):
         while True:
@@ -85,8 +117,8 @@ class neuron:
                 endpoint = self.metagraph.endpoint_objs[uid]
                 if endpoint.ip == "0.0.0.0" and endpoint.uid != 0: pass
                 if endpoint.uid == 0:
-                    endpoint = bittensor.endpoint(
-                        version=bittensor.__version_as_int__,
+                    endpoint = bt.endpoint(
+                        version=bt.__version_as_int__,
                         uid=0,
                         ip="127.0.0.1",
                         ip_type=4,
@@ -95,7 +127,7 @@ class neuron:
                         coldkey=self.wallet.coldkeypub.ss58_address,
                         modality=0,
                     )
-                module = bittensor.text_prompting( endpoint = endpoint, wallet = self.wallet )
+                module = bt.text_prompting( endpoint = endpoint, wallet = self.wallet )
                 response = await module.async_forward(roles=['user'], messages=[user_message], timeout=12)
                 return response.response
             
