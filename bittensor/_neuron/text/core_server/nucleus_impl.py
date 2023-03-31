@@ -7,6 +7,8 @@ import torch.nn.functional as F
 from types import SimpleNamespace
 from typing import Tuple, Optional
 
+import os
+import json
 import transformers
 from transformers import AutoModel,AutoTokenizer,AutoConfig, AutoModelForCausalLM
 from torch.nn.utils.rnn import pad_sequence
@@ -23,11 +25,15 @@ class server(torch.nn.Module):
                 padding: bool =None, 
                 interpolate: bool =None,
                 inter_degree: str = None,
-                model = None,
-                tokenizer = None,
-                mapping_function = None,
-                token_remap = None,
-                checking= None):
+                model: 'torch.module' = None,
+                tokenizer: 'transformers.tokenizer' = None,
+                mapping_function: callable = None,
+                token_remap: callable = None,
+                checking: bool = None,
+                device_map: bool = None,
+                max_memory: dict = None,
+                load_in_8bit: bool  = None,
+                ):
         r"""" Creates a server that serves up a pretrained miner on the bittensor network
         Args:
                 config (:obj:`bittensor.Config`, `required`): 
@@ -52,6 +58,14 @@ class server(torch.nn.Module):
                     Custom mapping function that maps between sequence length differences between tokenizers
                 token_remap (:obj:Callable, `optional`):
                     Custom function that maps between tokenizers (defaults to self.remapping_token)
+                device_map (:obj:bool, `optional`):
+                    If the server should map its model across multiple different gpus (multi-gpu serving)
+                load_in_8bit (:obj:bool, `optional`):
+                    If the server should turn on its LLM.int8 mixed quantilization.
+                    Reduces the memory usage by ~3x and increases inference speed
+                max_memory (:obj:dict, `optional`):
+                    Determines the max memory useage in each gpu, if not set, will be determined from the config
+                    
         """
         super(server, self).__init__()
         if config == None: config = server.config()
@@ -59,11 +73,19 @@ class server(torch.nn.Module):
         self.std_tokenizer = bittensor.tokenizer()
         self.device = config.neuron.device
 
+        #parameters of loading in the model
+        self.device_map = device_map if device_map != None else config.neuron.device_map
+        self.max_memory = max_memory if max_memory != None else self.load_memory_map(config.neuron.max_memory_path)
+        self.load_in_8bit = load_in_8bit if load_in_8bit != None else config.neuron.load_in_8bit        
+        
         #setting up pretrained model
         self.model_name = model_name if model_name != None else config.neuron.model_name
         self.pretrained = pretrained if pretrained != None else config.neuron.pretrained
         if self.pretrained == True:
-            self.pre_model = model if model != None else AutoModelForCausalLM.from_pretrained(self.model_name)
+            if model == None:
+                model = self.load_pretrained_model()
+            self.pre_model = model
+
             self.tokenizer = tokenizer
             if tokenizer is None:
                 try:
@@ -209,7 +231,7 @@ class server(torch.nn.Module):
         to_text_batch, from_offsets_batch, to_offsets_batch, pad_offsets_batch = result
 
         tokens = self.tokenizer(to_text_batch, padding=True, truncation=True, max_length=token_batch.size(1), return_tensors='pt',
-                                add_special_tokens=False).to(self.device)  # assume tokenizer.padding_side = 'left'
+                                add_special_tokens=False) # assume tokenizer.padding_side = 'left'
 
         if return_offsets_mapping:  # get offsets_mapping in tokenization to delineate token segment positions
             server_tokens = self.tokenizer(to_text_batch, return_offsets_mapping=True, add_special_tokens=False)
@@ -300,8 +322,6 @@ class server(torch.nn.Module):
                 encoded_hidden (:type:`torch.Tensor`, `required`)
                     The hidden layer output as a torch tensor of shape [batch_size, sequence_len, __network_dim__ ]
         """
-        transformers.set_seed(0)
-        transformers.enable_full_determinism(0)
 
         sen_len = inputs.size()
         tokens = self.token_remap(inputs, tokenizer)  # remap to server tokenizer
@@ -358,8 +378,6 @@ class server(torch.nn.Module):
                 logits_std (:obj:`torch.FloatTensor`):
                     The nucleus's logit outputs as a torch tensor of shape [batch_size, sequence_len, __vocab_size__]
         """
-        transformers.set_seed(0)
-        transformers.enable_full_determinism(0)
 
         tokens = self.token_remap(token_batch, std_tokenizer=tokenizer, return_offsets_mapping=True)  # remap to server tokenizer
 
@@ -427,14 +445,13 @@ class server(torch.nn.Module):
                       [prob_floor_b=1, ignore_index, ..., ignore_index]],
                      [...]]
         """
-        transformers.set_seed(0)
-        transformers.enable_full_determinism(0)
         
         if std_tokenizer is None:
             std_tokenizer = self.std_tokenizer
 
         tokens = self.token_remap(token_batch, std_tokenizer)
-
+        if not self.device_map:
+            tokens = tokens.to(self.device)
         def _forward(_model_output=model_output):
             if _model_output is None:
                 _model_output = self.pre_model(input_ids=tokens['input_ids'],
@@ -560,7 +577,10 @@ class server(torch.nn.Module):
         parser.add_argument('--neuron.finetune.all', action='store_true', help='Finetune your whole model instead of only on the last (few) layers', default=False)
         parser.add_argument('--neuron.finetune.num_layers', type=int, help='The number of layers to finetune on your model.', default=1)
         parser.add_argument('--neuron.finetune.layer_name', type=str, help='Specify since which layer to finetune. eg. encoder.layer.11', default=None)
-        
+        parser.add_argument('--neuron.device_map',  action='store_true', help='(experimental) automatically maps model across multiple gpus ', default=False)
+        parser.add_argument('--neuron.max_memory_path', type=str, help='If set, loads in memory mapping from path')
+        parser.add_argument('--neuron.load_in_8bit',  action='store_true', help='(experimental) automatically maps to LLM.int8()', default=False)
+
         # Miner arguements
         parser.add_argument('--neuron.name', type=str, help='Trials for this miner go in miner.root / (wallet_cold - wallet_hot) / miner.name ', default='core_server')
         parser.add_argument('--neuron.checking', action='store_false', help='To check if server settings are correct',default=True)
@@ -602,3 +622,32 @@ class server(torch.nn.Module):
         bittensor.metagraph.add_args( parser )
         bittensor.prometheus.add_args( parser )
         return bittensor.config( parser )
+
+    def load_pretrained_model(self):
+        params = {
+            'pretrained_model_name_or_path':self.config.neuron.model_name,
+            'device_map':'auto' if self.device_map else None,
+            'max_memory':self.max_memory,
+            'load_in_8bit': True if self.load_in_8bit else False
+        }
+        model = AutoModelForCausalLM.from_pretrained(**params)
+
+        if not self.device_map: 
+            model.to(self.config.neuron.device) 
+        return model
+
+    def load_memory_map(self, path):
+        if path == None:
+            return None
+
+        file_path = str(os.getcwd() + '/' + path)
+        with open(file_path, "r") as file:
+            saved_mapping = json.load(file)
+        memory_map = {}
+        for v, i in saved_mapping.items():
+            if v != 'cpu':
+                memory_map[int(v)]= i
+            else:
+                memory_map[v] = i 
+
+        return memory_map
