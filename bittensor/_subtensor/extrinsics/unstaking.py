@@ -255,9 +255,13 @@ def unstake_multiple_extrinsic (
             unstaking_balance = bittensor.Balance.from_tao( amount )
         else:
             unstaking_balance = amount
-
-        # Check enough to unstake.
+        
         stake_on_uid = old_stake
+        if stake_on_uid == 0:
+            # Skip
+            continue
+        
+        # Check enough to unstake.
         if unstaking_balance > stake_on_uid:
             bittensor.__console__.print(":cross_mark: [red]Not enough stake[/red]: [green]{}[/green] to unstake: [blue]{}[/blue] from hotkey: [white]{}[/white]".format(stake_on_uid, unstaking_balance, wallet.hotkey_str))
             continue
