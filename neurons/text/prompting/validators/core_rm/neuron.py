@@ -84,6 +84,10 @@ class neuron:
         self.config = config if config is not None else neuron.config()
         bt.logging( config = self.config )
 
+        self.config.neuron.reward_path = os.path.expanduser(self.config.neuron.reward_path)
+        if not os.path.exists( self.config.neuron.reward_path + '/hf_ckpt.pt' ):
+            os.makedirs(self.config.neuron.reward_path, exist_ok=True)
+            
         if not os.path.exists( self.config.neuron.reward_path + '/hf_ckpt.pt' ):
             os.makedirs(self.config.neuron.reward_path, exist_ok=True)
             os.system(
