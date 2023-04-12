@@ -42,6 +42,7 @@ class GatingModel( torch.nn.Module ):
         parser.add_argument('--gating.num_uids', type=int, default=4096, help='Number of uids to gate on')
         parser.add_argument('--gating.learning_rate', type=float, default=0.01, help='Learning rate for the gating model')
         parser.add_argument('--gating.momentum', type=float, default=0.9, help='Momentum for the gating model')
+        parser.add_argument('--gating.inference', type = bool, default = False, help = 'Turn on Inference')
 
     @classmethod
     def config ( cls ):

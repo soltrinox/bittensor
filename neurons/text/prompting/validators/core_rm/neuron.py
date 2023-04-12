@@ -116,7 +116,7 @@ class neuron:
             if fpath.endswith(".pt") or fpath.endswith(".bin"):
                 checkpoint = os.path.join( self.config.neuron.reward_path, fpath )
                 break
-        ckpt_state = torch.load(checkpoint)
+        #ckpt_state = torch.load(checkpoint)
         #self.reward_model.load_state_dict(ckpt_state)
         #self.reward_model.eval()
         #self.reward_model.requires_grad_(False)
@@ -233,7 +233,6 @@ class neuron:
             timeout = float( self.config.neuron.base_timeout + self.config.neuron.length_timeout_multiplier * len( message ) )
         )
         bittensor.logging.debug( 'topk_uids', topk_uids )
-        bittensor.logging.debug( 'completions', completions )
 
         # Filter out any `None` `completions`.
         successful_uids = torch.tensor([uid for uid, completion in list(zip(topk_uids, completions)) if completion is not None and completion.response is not None and len(completion.response) > 10], dtype=torch.int64).to(self.device)
