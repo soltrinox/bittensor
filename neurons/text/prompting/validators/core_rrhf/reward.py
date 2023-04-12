@@ -68,7 +68,7 @@ class RewardModel(nn.Module):
             return scores
         
         with torch.no_grad():
-            rewards = [reward_fn([completion]) for completion in completions]
+            rewards = [torch.rand(1) for completion in completions]
             for completion, reward in zip(completions, rewards):
                 print(completion)
                 print(reward)
