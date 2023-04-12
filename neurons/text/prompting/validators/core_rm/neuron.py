@@ -117,9 +117,9 @@ class neuron:
                 checkpoint = os.path.join( self.config.neuron.reward_path, fpath )
                 break
         ckpt_state = torch.load(checkpoint)
-        self.reward_model.load_state_dict(ckpt_state)
-        self.reward_model.eval()
-        self.reward_model.requires_grad_(False)
+        #self.reward_model.load_state_dict(ckpt_state)
+        #self.reward_model.eval()
+        #self.reward_model.requires_grad_(False)
 
         #gating model
         self.gating_model = GatingModel( metagraph = self.metagraph, config = self.config ).to(self.device)
