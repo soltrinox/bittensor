@@ -275,8 +275,6 @@ class neuron:
         )
         self.history.put( result )
 
-        # Return the completion with the highest reward.
-        bittensor.logging.debug( 'forward result', result )
         return result
     
     # User queries here.
