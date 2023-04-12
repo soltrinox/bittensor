@@ -47,7 +47,7 @@ class RewardModel(nn.Module):
     def reward( self, completions: List[str] ) -> torch.FloatTensor:
         def reward_fn( samples ):
             samples = [s + self.tokenizer.eos_token for s in samples]
-            input = self.tokenizer(samples, padding=True, truncation=True, max_length=1024, return_tensors="pt").to(
+            input = self.tokenizer(samples, padding=False, truncation=False, max_length=1024, return_tensors="pt").to(
                 self.device
             )
 
@@ -62,7 +62,7 @@ class RewardModel(nn.Module):
             return out
         
         with torch.no_grad():
-            rewards = [reward_fn([completion]) for completion in completions]
+            rewards = [torch.rand(1) for completion in completions]
             for completion, reward in zip(completions, rewards):
                 print(completion)
                 print(reward)
