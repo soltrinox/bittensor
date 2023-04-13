@@ -309,11 +309,11 @@ class neuron:
         while True:
             
             # Query the network for a random question.
-            bittensor.logging('######## generating question ##########')
+            bittensor.logging.debug('######## generating question ##########')
             question = self.forward( self.config.neuron.question_prompt )
             if question == None: continue # no responses from network.
         
-            bittensor.logging('######## generating Response ##########')
+            bittensor.logging.debug('######## generating Response ##########')
             # Ask the network to complete the random question, training the gating network.
             response = self.forward( question.completion, topk = self.config.neuron.training_topk )
             
