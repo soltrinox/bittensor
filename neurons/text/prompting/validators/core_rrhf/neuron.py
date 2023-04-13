@@ -190,6 +190,7 @@ class neuron:
             self, 
             message: str,
             topk: Optional[int] = None,
+            inference: bool = False,
         ) -> SimpleNamespace:
         """
         Queries the network for a response to the passed message using a gating model to select the best uids.
@@ -215,6 +216,8 @@ class neuron:
         if topk is None or topk == -1: topk = self.metagraph.n.item()
         if topk > len(available_uids): topk = len(available_uids)
         bittensor.logging.debug( 'topk', topk)
+        bittensor.logging.debug( 'available_uids', available_uids)
+        
         if len( available_uids ) == 0: bittensor.logging.error('no available uids'); return None
 
         # We run the gating network here to get the best uids
@@ -227,7 +230,13 @@ class neuron:
         # Select the top `topk` `uids` based on the highest `scores`.
         # Use the selected `uids` to query the dendrite pool.
         # Print the `completions`.
-        topk_uids = available_uids[ scores[ available_uids ].sort()[ 1 ][ -topk: ]]
+        if inference:
+            topk_uids = available_uids[ scores[ available_uids ].sort()[ 1 ][ -topk: ]]
+        else:
+            permutation = torch.randperm(available_uids.size(0))
+            topk_uids = available_uids[permutation[:topk]]
+
+
         completions = self.dendrite_pool( 
             prompt = self.config.neuron.base_prompt, 
             message = message, 
@@ -242,7 +251,7 @@ class neuron:
         successful_completions = [completion.response for completion in completions if completion is not None and completion.response is not None and len(completion.response) > 10]
 
         bittensor.logging.debug( 'successful_uids', successful_uids )
-        bittensor.logging.debug( 'successful_completions', successful_completions )
+        #bittensor.logging.debug( 'successful_completions', successful_completions )
         if len( successful_completions ) == 0: bittensor.logging.error('no successful completions'); return None
 
         # Calculate the rewards for the successful `completions` using the reward model.
@@ -300,11 +309,13 @@ class neuron:
         while True:
             
             # Query the network for a random question.
+            bittensor.logging('######## generating question ##########')
             question = self.forward( self.config.neuron.question_prompt )
             if question == None: continue # no responses from network.
-            
+        
+            bittensor.logging('######## generating Response ##########')
             # Ask the network to complete the random question, training the gating network.
-            self.forward( question.completion, topk = self.config.neuron.training_topk )
+            response = self.forward( question.completion, topk = self.config.neuron.training_topk )
             
             # Check if enough epoch blocks have elapsed since the last epoch.
             if self.subtensor.block > last_epoch_block: # run every block. # > self.subtensor.validator_epoch_length( self.config.netuid ) :

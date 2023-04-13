@@ -29,13 +29,13 @@ from typing import List
 class RewardModel(nn.Module):
     def __init__( self, model_path: str ):
         super().__init__()
-        self.model = AutoModelForCausalLM.from_pretrained( model_path )
-        self.config = self.model.config
+        #self.model = AutoModelForCausalLM.from_pretrained( model_path )
+        #self.config = self.model.config
         # `gpt-neo(x)` models use `hidden_size` attribute names instead of `n_embd``
-        self.config.n_embd = self.config.hidden_size if hasattr(self.config, "hidden_size") else self.config.n_embd
+        #self.config.n_embd = self.config.hidden_size if hasattr(self.config, "hidden_size") else self.config.n_embd
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        self.transformer = self.model.transformer
-        self.v_head = nn.Linear(self.config.n_embd, 1, bias=False)
+        #self.transformer = self.model.transformer
+        #self.v_head = nn.Linear(self.config.n_embd, 1, bias=False)
         self.tokenizer = AutoTokenizer.from_pretrained('EleutherAI/gpt-j-6b')
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.PAD_ID = self.tokenizer(self.tokenizer.pad_token)["input_ids"][0]
@@ -68,7 +68,7 @@ class RewardModel(nn.Module):
             return scores
         
         with torch.no_grad():
-            rewards = [torch.rand(1) for completion in completions]
+            rewards = [len(completion) for completion in completions]
             for completion, reward in zip(completions, rewards):
                 print(completion)
                 print(reward)
