@@ -836,7 +836,12 @@ def test_forward_priority_2nd_request_timeout():
     def priority(pubkey:str, request_type:str, inputs_x):
         return 100
 
-    axon = bittensor.axon( netuid = -1, wallet = wallet, priority= priority, priority_threadpool = bittensor.prioritythreadpool(max_workers = 1))
+    axon = bittensor.axon(
+        netuid = -1,
+        wallet = wallet,
+        priority= priority,
+        priority_threadpool = bittensor.prioritythreadpool(max_workers = 1)
+    )
 
     def forward( inputs_x: torch.FloatTensor, synapses , model_output = None):
         time.sleep(2)
