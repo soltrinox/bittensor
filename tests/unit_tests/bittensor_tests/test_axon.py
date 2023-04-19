@@ -860,12 +860,8 @@ def test_forward_priority_2nd_request_timeout():
     response, code, synapses = future.result()
     assert code == bittensor.proto.ReturnCode.Success
     
-    try: 
+    with pytest.raises(concurrent.futures.TimeoutError):
         future2.result(timeout = 1)
-    except concurrent.futures.TimeoutError:
-        pass
-    else:
-        raise AssertionError('Expected to Timeout')
 
     axon.stop()
 
@@ -1265,9 +1261,9 @@ class TestExternalAxon(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    test_grpc_forward_fails()
+    #test_grpc_forward_fails()
     # test_forward_joint_success()
     # test_forward_joint_missing_synapse()
     # test_forward_priority_timeout()
-    #test_forward_priority_2nd_request_timeout()
+    test_forward_priority_2nd_request_timeout()
     # test_forward_joint_faulty_synapse()
