@@ -136,7 +136,9 @@ except ValueError:
 from bittensor._config import config as config
 
 # ---- LOGGING ----
+# Duplicate import for ease of use.
 from bittensor._logging import logging as logging
+from bittensor._logging import logging as logger
 
 # ---- Protos ----
 import bittensor._proto.bittensor_pb2 as proto

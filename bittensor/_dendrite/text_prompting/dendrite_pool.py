@@ -31,6 +31,7 @@ class TextPromptingDendritePool( torch.nn.Module ):
         ):
         super(TextPromptingDendritePool, self).__init__()
         self.metagraph = metagraph
+        # TOOD(const): check for wallet here.
         self.keypair = keypair
         self.dendrites = [ bittensor.text_prompting( axon = axon, keypair = self.keypair ) for axon in self.metagraph.axons ]
         self.loop = asyncio.get_event_loop()
