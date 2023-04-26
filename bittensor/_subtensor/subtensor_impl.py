@@ -37,6 +37,7 @@ from .extrinsics.transfer import transfer_extrinsic
 from .extrinsics.set_weights import set_weights_extrinsic
 from .extrinsics.prometheus import prometheus_extrinsic
 from .extrinsics.delegation import delegate_extrinsic, nominate_extrinsic,undelegate_extrinsic
+from .extrinsics.association import associate_extrinsic, disassociate_extrinsic
 
 # Logging
 from loguru import logger
@@ -770,6 +771,18 @@ class Subtensor:
             return []
 
         return DelegateInfo.delegated_list_from_vec_u8( result )
+    
+    ########################################
+    ########### Associate Keys #############
+    ########################################
+
+    def is_hotkey_owner(
+            self,
+            coldkey_ss58: str,
+            hotkey_ss58: str,
+            block: Optional[int] = None
+    ) -> bool:
+        return self.get_hotkey_owner( hotkey_ss58, block ) == coldkey_ss58
 
 
     ########################################
@@ -981,12 +994,6 @@ class Subtensor:
         print("Metagraph subtensor: ", self.network)
         return metagraph
 
-    ################
-    #### Transfer ##
-    ################
-
-
-    
 
     ################
     #### Legacy ####
