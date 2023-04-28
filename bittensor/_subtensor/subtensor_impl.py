@@ -817,8 +817,8 @@ class Subtensor:
 
     def get_all_neurons_for_pubkey( self, hotkey_ss58: str, block: Optional[int] = None ) -> List[NeuronInfo]:
         netuids = self.get_netuids_for_hotkey( hotkey_ss58, block) 
-        uids = [self.get_uid_for_hotkey_on_subnet(hotkey_ss58, net) for net in netuids] 
-        return [self.neuron_for_uid( uid, net ) for uid, net in list(zip(uids, netuids))]
+        uids = [self.get_uid_for_hotkey_on_subnet(hotkey_ss58, net, block) for net in netuids] 
+        return [self.neuron_for_uid( uid, net, block ) for uid, net in list(zip(uids, netuids))]
 
     def neuron_has_validator_permit( self, uid: int, netuid: int, block: Optional[int] = None ) -> Optional[bool]:
         return self.query_subtensor( 'ValidatorPermit', block, [ netuid, uid ] ).value
