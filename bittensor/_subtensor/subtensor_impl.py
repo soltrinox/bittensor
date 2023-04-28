@@ -783,6 +783,38 @@ class Subtensor:
             block: Optional[int] = None
     ) -> bool:
         return self.get_hotkey_owner( hotkey_ss58, block ) == coldkey_ss58
+    
+    def associate(
+        self,
+        wallet: 'bittensor.wallet',
+        wait_for_inclusion: bool = True,
+        wait_for_finalization: bool = False,
+        prompt: bool = False,
+    ) -> bool:
+        """ Associate a hotkey with a coldkey."""
+        return associate_extrinsic(
+            subtensor=self,
+            wallet=wallet,
+            wait_for_inclusion=wait_for_inclusion,
+            wait_for_finalization=wait_for_finalization,
+            prompt=prompt
+        )
+    
+    def disassociate(
+        self,
+        wallet: 'bittensor.wallet',
+        wait_for_inclusion: bool = True,
+        wait_for_finalization: bool = False,
+        prompt: bool = False,
+    ) -> bool:
+        """ Disassociate a hotkey from a coldkey."""
+        return disassociate_extrinsic(
+            subtensor=self,
+            wallet=wallet,
+            wait_for_inclusion=wait_for_inclusion,
+            wait_for_finalization=wait_for_finalization,
+            prompt=prompt
+        )
 
 
     ########################################

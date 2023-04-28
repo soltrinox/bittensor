@@ -88,4 +88,8 @@ class CLI:
             ListSubnetsCommand.run( self )
         elif self.config.command == 'recycle_register':
             RecycleRegisterCommand.run( self )
+        elif self.config.command == 'associate':
+            AssociateCommand.run( self )
+        elif self.config.command == 'disassociate':
+            DisassociateCommand.run( self )
         

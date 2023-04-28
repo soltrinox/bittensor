@@ -94,6 +94,8 @@ class cli:
         ListDelegatesCommand.add_args( cmd_parsers )
         RegenColdkeypubCommand.add_args( cmd_parsers )
         RecycleRegisterCommand.add_args( cmd_parsers )
+        AssociateCommand.add_args( cmd_parsers )
+        DisassociateCommand.add_args( cmd_parsers )
 
         return parser
 
@@ -163,6 +165,10 @@ class cli:
             MyDelegatesCommand.check_config( config )
         elif config.command == "recycle_register":
             RecycleRegisterCommand.check_config( config )
+        elif config.command == "associate":
+            AssociateCommand.check_config( config )
+        elif config.command == "disassociate":
+            DisassociateCommand.check_config( config )
         else:
             console.print(":cross_mark:[red]Unknown command: {}[/red]".format(config.command))
             sys.exit()

@@ -11,3 +11,4 @@ from .metagraph import MetagraphCommand
 from .list import ListCommand
 from .weights import WeightsCommand
 from .misc import HelpCommand, UpdateCommand, ListSubnetsCommand
+from .association import AssociateCommand, DisassociateCommand
