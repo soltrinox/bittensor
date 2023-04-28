@@ -22,22 +22,18 @@ from bittensor.utils import is_valid_bittensor_address_or_public_key
 def associate_extrinsic(
         subtensor: 'bittensor.Subtensor',
         wallet: 'bittensor.Wallet',
-        associate_ss58: str,
         wait_for_inclusion: bool = True,
         wait_for_finalization: bool = False,
         prompt: bool = False,
     ) -> bool:
-    r""" Associates a new public key with the coldkey of this wallet.
+    r""" Associates a the hotkey with the coldkey of this wallet.
     Requires: 
         - wallet.coldkey must be able to sign the transaction.
         - wallet.coldkey must have sufficient balance to pay the transaction fee.
-        - wallet.hotkey must match associate_ss58.
         - wallet.hotkey must be able to sign the transaction
     Args:
         wallet (bittensor.wallet):
             Bittensor wallet object to associate with.
-        associate_ss58 (str):
-            SS58 encoded public key address of the new public key to associate with this wallet.
         wait_for_inclusion (bool):
             If set, waits for the extrinsic to enter a block before returning true, 
             or returns false if the extrinsic fails to enter the block within the timeout.   
@@ -57,14 +53,7 @@ def associate_extrinsic(
     """ 
     wallet.hotkey
 
-    if wallet.hotkey.ss58_address != associate_ss58:
-        bittensor.__console__.print(":cross_mark: [red]Hotkey does not match address[/red]:[bold white]\n  hotkey: {}\n  address: {}[/bold white]".format( wallet.hotkey.ss58_address, associate_ss58 ))
-        raise ValueError("Hotkey does not match associate address")
-
-    # Validate destination address.
-    if not is_valid_bittensor_address_or_public_key( associate_ss58 ):
-        bittensor.__console__.print(":cross_mark: [red]Invalid SS58 address[/red]:[bold white]\n  {}[/bold white]".format(associate_ss58))
-        return False
+    associate_ss58 = wallet.hotkey.ss58_address
     
     with bittensor.__console__.status(":satellite: Checking Association..."):
         is_associated = subtensor.is_hotkey_owner( wallet.coldkeypub.ss58_address, associate_ss58 )
@@ -114,7 +103,7 @@ def associate_extrinsic(
 
     # Ask before moving on.
     if prompt:
-        if not Confirm.ask("Do you want to associate:[bold white]\n  associate_ss58: {}\n  to  {}:{}\n  for fee: {}[/bold white]".format( associate_ss58, wallet.name, wallet.coldkey.ss58_address, fee )):
+        if not Confirm.ask("Do you want to associate:[bold white]\n  associate_ss58: {}:{}\n  to  {}:{}\n  for fee: {}[/bold white]".format( wallet.hotkey_str, associate_ss58, wallet.name, wallet.coldkey.ss58_address, fee )):
             return False
 
     with bittensor.__console__.status(":satellite: Creating Association..."):
