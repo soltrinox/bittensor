@@ -154,7 +154,7 @@ def disassociate_extrinsic(
         wallet (bittensor.wallet):
             Bittensor wallet object to disassociate from.
         associate_ss58 (str):
-            SS58 encoded public key address of the new public key to diassociate from this wallet.
+            SS58 encoded public key address of the public key to diassociate from this wallet.
         wait_for_inclusion (bool):
             If set, waits for the extrinsic to enter a block before returning true, 
             or returns false if the extrinsic fails to enter the block within the timeout.   

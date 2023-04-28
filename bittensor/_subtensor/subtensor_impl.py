@@ -803,6 +803,7 @@ class Subtensor:
     def disassociate(
         self,
         wallet: 'bittensor.wallet',
+        associate_ss58: str,
         wait_for_inclusion: bool = True,
         wait_for_finalization: bool = False,
         prompt: bool = False,
@@ -811,6 +812,7 @@ class Subtensor:
         return disassociate_extrinsic(
             subtensor=self,
             wallet=wallet,
+            associate_ss58=associate_ss58,
             wait_for_inclusion=wait_for_inclusion,
             wait_for_finalization=wait_for_finalization,
             prompt=prompt

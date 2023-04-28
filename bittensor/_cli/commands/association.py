@@ -83,6 +83,7 @@ class DisassociateCommand:
 
         subtensor.disassociate(
             wallet = wallet,
+            associate_ss58=wallet.hotkey.ss58_address,
             wait_for_inclusion = True,
             wait_for_finalization= True,
             prompt=not config.no_prompt
