@@ -433,6 +433,7 @@ class neuron:
             """
 
             if reset_bootstrap_prompt:
+                print("======RESET=====")
                 bootstrap_prompt = google_ai_dataset_place_holder
                 with open('prompt_history.txt', 'a') as file:
                     file.write("============== reset ==================" + '\n')
@@ -540,6 +541,7 @@ class neuron:
                         prompt_history = prompt_history[-100:]                      
 
                 steps += 1 
+                bittensor.logging.trace(steps)
                 prompt_history.append(prompt)
 
                 with open('prompt_history.txt', 'a') as file:
