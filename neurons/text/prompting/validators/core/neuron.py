@@ -425,7 +425,7 @@ class neuron:
     def get_question(self, uids, bootstrap_prompt, reset_bootstrap_prompt = False):
         
         def _get_question(uids, bootstrap_prompt, reset_bootstrap_prompt = False):
-            google_ai_dataset_place_holder = "Name me one of top 100 grossing movies of all time."
+            google_ai_dataset_place_holder = "Power is the rate that energy is released. The units for power are watts (W), which equal joules per second . For example, a 60 W light bulb transforms 60 joules of electrical energy into light and heat energy every second."
 
             if reset_bootstrap_prompt:
                 print("======RESET=====")
@@ -495,7 +495,7 @@ class neuron:
                     prompt = self.get_question(
                         uids = forward_result.uids[idx_reward_sorted],
                         bootstrap_prompt = forward_result.best_completion, 
-                        reset_bootstrap_prompt = (steps % self.config.neuron.reset_bootstrap_prompt_frequency == 0),
+                        reset_bootstrap_prompt = (steps % self.config.neuron.reset_bootstrap_prompt_frequency == 5),
                         #random_sample_uids = self.config.neuron.question_random_sample_uids
                     )
 
