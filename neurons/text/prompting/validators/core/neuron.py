@@ -438,7 +438,7 @@ class neuron:
             
             question_prompt = f"{bootstrap_prompt}\n\n{self.config.neuron.follow_up_prompt}"
             print(question_prompt)
-            
+            print(uids)
             questions = self.dendrite_pool(
                 roles = ['user'], 
                 messages = [ question_prompt ], 
@@ -492,6 +492,7 @@ class neuron:
 
                 if forward_result is not None:
                     idx_reward_sorted = forward_result.rewards.sort(descending = True)[1]
+                    print(idx_reward_sorted)
                     prompt = self.get_question(
                         uids = forward_result.uids[idx_reward_sorted],
                         bootstrap_prompt = forward_result.best_completion, 
