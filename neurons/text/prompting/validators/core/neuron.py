@@ -490,7 +490,7 @@ class neuron:
                     topk = self.config.neuron.training_topk,
                     random_sample_uids = True,
                     train_gating_model = True,
-                    timeout = self.config.neuron.training_timeout
+                    timeout = 12
                 )
 
                 if forward_result is not None:
