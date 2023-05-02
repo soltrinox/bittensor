@@ -477,7 +477,7 @@ class neuron:
         """
         # Store the current epoch block number for comparison later.
         last_epoch_block = self.subtensor.block
-        prompt = self.config.neuron.base_prompt
+        prompt = "Name me one of top 100 grossing movies of all time."
         steps = 0
         prompt_history = []
         # Start an infinite loop for training.
