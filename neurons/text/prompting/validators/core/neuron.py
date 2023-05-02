@@ -305,7 +305,7 @@ class neuron:
                 if role_i != 'system': flattened_message_for_reward += message_i.strip() + '\n\n'
             full_completions_for_reward = [ flattened_message_for_reward + comp.strip() for comp in successful_completions ]
             completions_for_reward = [comp.strip() for comp in successful_completions] 
-            rewards = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = False).to( self.device )
+            rewards = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True).to( self.device )
             bittensor.logging.trace( 'rewards', rewards )
         else:
             rewards = scores[ successful_uids ]
@@ -425,12 +425,7 @@ class neuron:
     def get_question(self, uids, bootstrap_prompt, reset_bootstrap_prompt = False):
         
         def _get_question(uids, bootstrap_prompt, reset_bootstrap_prompt = False):
-            google_ai_dataset_place_holder = """
-    The names of China include the many contemporary and historical appellations given in various languages for the East Asian country known
-    as Zhongguo ( 中國 / 中国 ) in its official language . China , the name in English for the country , was derived from Portuguese in the 16th century , 
-    and became popular in the mid 19th century . It is believed to be a borrowing from Middle Persian , and some have traced it further back to Sanskrit . 
-    It is also generally thought that the state of Qin that later formed the Qin dynasty is the ultimate source of the name , although there are other suggestions.
-            """
+            google_ai_dataset_place_holder = "Name me one of top 100 grossing movies of all time."
 
             if reset_bootstrap_prompt:
                 print("======RESET=====")
@@ -442,6 +437,7 @@ class neuron:
                 bootstrap_prompt = bootstrap_prompt.replace('As an AI language model, ', '') 
             
             question_prompt = f"{bootstrap_prompt}\n\n{self.config.neuron.follow_up_prompt}"
+            print(question_prompt)
             
             questions = self.dendrite_pool(
                 roles = ['user'], 
