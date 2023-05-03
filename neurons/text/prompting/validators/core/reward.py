@@ -53,6 +53,7 @@ class RewardModel(nn.Module):
                 sub_samples = [
                     "<|startoftext|>" + chosen + "<|endoftext|>" for chosen in sub_samples
                 ]
+                print(sub_samples)
                 encodings_dict = self.tokenizer(
                     sub_samples,
                     truncation=False,
@@ -65,7 +66,7 @@ class RewardModel(nn.Module):
                 input_ids = input_ids.repeat(2, 1)
                 attn_masks = attn_masks.repeat(2, 1)
                 with torch.no_grad():
-                    sub_scores = self.forward(input_ids=input_ids, attention_mask=attn_masks)
+                    sub_scores = self.forward(input_ids=input_ids.to( self.device ), attention_mask=attn_masks.to( self.device ))
                 scores_list.append(sub_scores["chosen_end_scores"])
             scores = torch.cat(scores_list, dim=0).mean().item()
             return scores
