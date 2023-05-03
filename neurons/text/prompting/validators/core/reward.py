@@ -53,7 +53,6 @@ class RewardModel(nn.Module):
                 sub_samples = [
                     "<|startoftext|>" + chosen + "<|endoftext|>" for chosen in sub_samples
                 ]
-                print(sub_samples)
                 encodings_dict = self.tokenizer(
                     sub_samples,
                     truncation=False,
@@ -102,7 +101,6 @@ class RewardModel(nn.Module):
         output_hidden_states=False,
     ):
         loss = None
-        print(input_ids.device, attention_mask.device)
         transformer_outputs = self.transformer(
             input_ids,
             attention_mask=attention_mask,
