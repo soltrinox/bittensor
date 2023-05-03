@@ -155,7 +155,7 @@ class neuron:
         self.tokenizer = AutoTokenizer.from_pretrained( 'EleutherAI/gpt-j-6b' )
 
         # check if invoking iter() is indeed necessary
-        self.dataset = iter(load_dataset('squad_v2', split='train', streaming=True))
+        self.dataset = iter(load_dataset('squad_v2', split='train', streaming=True).shuffle(buffer))
 
         self.moving_averaged_scores = torch.zeros((self.metagraph.n)).to( self.device )
         self.alpha = 0.99
@@ -372,12 +372,18 @@ class neuron:
         bittensor.logging.trace( 'normalized_rewards', normalized_rewards )
         bittensor.logging.trace( 'scattered_rewards', scattered_rewards )
         bittensor.logging.trace( 'moving_averaged_scores', self.moving_averaged_scores )    
-
+        """
         for uid, reward, complete in zip(successful_uids, rewards.tolist(), successful_completions):
             print(f"\n===== {uid, reward} =====\n")
 
             print('~~~ flattened_message_for_reward ~~~\n', flattened_message_for_reward) 
             print('~~~ completion ~~~\n', complete.strip())
+        """
+        print(f"\n===== {successful_uids[best_idx], rewards[best_idx]} =====\n")
+
+        print('~~~ flattened_message_for_reward ~~~\n', flattened_message_for_reward) 
+        print('~~~ completion ~~~\n', best_completion.strip())
+
         return event
 
     def inference( 
