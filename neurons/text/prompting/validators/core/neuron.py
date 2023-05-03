@@ -460,7 +460,7 @@ class neuron:
             # google_ai_dataset_place_holder = sample['answers']['text'][0]
 
             if reset_bootstrap_prompt:
-                bootstrap_prompt = next(self.dataset)['answers']['text'][0] # google_ai_dataset_place_holder
+                bootstrap_prompt = next(self.dataset)['context'] # google_ai_dataset_place_holder
                 with open('prompt_history.txt', 'a') as file:
                     file.write("============== reset ==================" + '\n')
                     file.write(f"bootstrap prompt: {bootstrap_prompt}" + '\n')
