@@ -155,7 +155,7 @@ class neuron:
         self.tokenizer = AutoTokenizer.from_pretrained( 'EleutherAI/gpt-j-6b' )
 
         # check if invoking iter() is indeed necessary
-        self.dataset = iter(load_dataset('squad_v2', split='train', streaming=True).shuffle(buffer))
+        self.dataset = iter(load_dataset('squad_v2', split='train', streaming=True).shuffle(buffer_size=10000))
 
         self.moving_averaged_scores = torch.zeros((self.metagraph.n)).to( self.device )
         self.alpha = 0.99
