@@ -552,7 +552,7 @@ class neuron:
                     prompt, reward_diff = self.get_question(
                         uids = forward_result.uids[idx_reward_sorted],
                         bootstrap_prompt = forward_result.best_completion, 
-                        reset_bootstrap_prompt = (steps % self.config.neuron.reset_bootstrap_prompt_frequency == 5),
+                        reset_bootstrap_prompt = (steps % self.config.neuron.reset_bootstrap_prompt_frequency == 0),
                         random_sample_uids = self.config.neuron.question_random_sample_uids
                     )
 
