@@ -79,7 +79,7 @@ class RewardModel(nn.Module):
                     print(completion)
                     print(f_reward - c_reward)
                 """
-                return torch.tensor(full_rewards, dtype=torch.float32) - torch.tensor(comp_rewards, dtype=torch.float32)
+                return torch.F.relu(torch.tensor(full_rewards, dtype=torch.float32)) - torch.F.relu(torch.tensor(comp_rewards, dtype=torch.float32))
             else:
                 for completion, f_reward in zip(full_completions, full_rewards):
                     print(completion)
