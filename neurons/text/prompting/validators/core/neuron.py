@@ -314,7 +314,7 @@ class neuron:
         successful_completions = [call.completion for call in forward_calls if call is not None and call.completion is not None and len(call.completion) > 10]
         unsuccessful_uids = torch.tensor([uid for uid in topk_uids if uid not in successful_uids])
         bittensor.logging.debug( 'successful_uids', successful_uids )
-        bittensor.logging.trace( 'successful_completions', successful_completions )
+        #bittensor.logging.trace( 'successful_completions', successful_completions )
         if len( successful_completions ) == 0: bittensor.logging.error('no successful completions'); return None
 
         # Calculate the rewards for the successful `completions` using the reward model.
@@ -381,6 +381,7 @@ class neuron:
             print('~~~ flattened_message_for_reward ~~~\n', flattened_message_for_reward) 
             print('~~~ completion ~~~\n', complete.strip())
         """
+        print("===== Best Completion =====")
         print(f"\n===== {successful_uids[best_idx], rewards[best_idx]} =====\n")
 
         print('~~~ flattened_message_for_reward ~~~\n', flattened_message_for_reward) 
