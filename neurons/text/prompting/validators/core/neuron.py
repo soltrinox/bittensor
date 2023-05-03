@@ -26,6 +26,7 @@ import random
 import bittensor
 import argparse
 import bittensor as bt
+import traceback
 
 from loguru import logger
 from types import SimpleNamespace
@@ -601,6 +602,7 @@ class neuron:
 
         except Exception as e:
             bittensor.logging.info( 'Error in training loop', str( e    ) )
+            print(traceback.format_exc())
     
     def compute_weights( self ) -> Tuple[ torch.LongTensor, torch.FloatTensor ]:
         """
