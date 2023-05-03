@@ -100,14 +100,10 @@ class RewardModel(nn.Module):
         output_hidden_states=False,
     ):
         loss = None
+        print(input_ids.device, attention_mask.device)
         transformer_outputs = self.transformer(
-            input_ids.to(self.device),
-            past_key_values=past_key_values,
+            input_ids,
             attention_mask=attention_mask,
-            token_type_ids=token_type_ids,
-            position_ids=position_ids,
-            head_mask=head_mask,
-            inputs_embeds=inputs_embeds,
         )
 
         hidden_states = transformer_outputs[0]
