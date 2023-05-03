@@ -100,7 +100,7 @@ class RewardModel(nn.Module):
     ):
         loss = None
         transformer_outputs = self.transformer(
-            input_ids,
+            input_ids.to(self.device),
             past_key_values=past_key_values,
             attention_mask=attention_mask,
             token_type_ids=token_type_ids,
