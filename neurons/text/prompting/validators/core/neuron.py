@@ -326,7 +326,7 @@ class neuron:
 
         best_idx = rewards.sort(descending = True)[1][0].item()
         best_completion = successful_completions[best_idx]
-        print('best idx', best_idx, best_completion)
+        print('best idx', successful_uids[best_idx], best_completion)
 
         # Save the query history in a `result` object.
         # Return the `completion` with the highest reward.
@@ -356,7 +356,7 @@ class neuron:
         bittensor.logging.trace( 'scattered_rewards', scattered_rewards )
         bittensor.logging.trace( 'moving_averaged_scores', self.moving_averaged_scores )    
 
-        return event
+        return event, successful_uids[best_idx]
 
     def inference( 
             self, 
@@ -482,7 +482,7 @@ class neuron:
         try:
             while True:
                 # Ask the network to complete the random question, training the gating network.
-                forward_result = self.forward( 
+                forward_result, best_uid = self.forward( 
                     roles = ['system', 'user' ],
                     messages = [ self.config.neuron.base_prompt, prompt ],
                     topk = self.config.neuron.training_topk,
@@ -495,7 +495,7 @@ class neuron:
                     idx_reward_sorted = forward_result.rewards.sort(descending = True)[1]
 
                     prompt = self.get_question(
-                        uids = torch.tensor([forward_result.best_uid]),
+                        uids = torch.tensor([best_uid]),
                         bootstrap_prompt = forward_result.best_completion, 
                         reset_bootstrap_prompt = (steps % self.config.neuron.reset_bootstrap_prompt_frequency == 5),
                         #random_sample_uids = self.config.neuron.question_random_sample_uids
