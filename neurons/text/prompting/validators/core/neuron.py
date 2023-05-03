@@ -126,6 +126,7 @@ class neuron:
         parser.add_argument( '--neuron.events_retention_size',  type = str,  help = 'Events retention size.', default = "2 GB" )
         parser.add_argument( '--neuron.no_reward_model', action = 'store_true', help = 'If set, we dont load the reward model instead use just the scores.', default = False )
         parser.add_argument( '--neuron.question_random_sample_uids', action = 'store_true', help = 'If set, random sample uids to get question.', default = False )
+        parser.add_argument( '--neuron.reward_shift', type = int, help = 'The value to shift rewards for calculation.', default = 3 )
 
     @classmethod
     def config ( cls ):
@@ -324,7 +325,7 @@ class neuron:
                 if role_i != 'system': flattened_message_for_reward += message_i.strip() + '\n\n'
             full_completions_for_reward = [ flattened_message_for_reward + comp.strip() for comp in successful_completions ]
             completions_for_reward = [comp.strip() for comp in successful_completions] 
-            rewards = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True).to( self.device )
+            rewards = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True, shift = self.config.neuron.reward_shift).to( self.device )
             bittensor.logging.trace( 'rewards', rewards )
         else:
             rewards = scores[ successful_uids ]
@@ -461,6 +462,7 @@ class neuron:
 
             if reset_bootstrap_prompt:
                 bootstrap_prompt = next(self.dataset)['context'] # google_ai_dataset_place_holder
+                self.base_prompt = bootstrap_prompt
                 with open('prompt_history.txt', 'a') as file:
                     file.write("============== reset ==================" + '\n')
                     file.write(f"bootstrap prompt: {bootstrap_prompt}" + '\n')
@@ -480,7 +482,7 @@ class neuron:
             successful_questions = [question.completion for question in questions if question is not None and question.completion is not None and len(question.completion) > 10]
             full_completions_for_reward = [ bootstrap_prompt + comp.strip() for comp in successful_questions ]
             completions_for_reward = [comp.strip() for comp in successful_questions] 
-            reward_diffs = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True).to( self.device )
+            reward_diffs = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True, shift = self.config.neuron.reward_shift).to( self.device )
             
             for question, reward_diff in zip(successful_questions, reward_diffs.tolist()):
                 print(f"\n=== Question score: {reward_diff}===\n")
@@ -521,7 +523,7 @@ class neuron:
         
         sample = next(self.dataset)
         # grab the question from the current sample
-        base_prompt = sample['context']
+        self.base_prompt = sample['context']
         reward_diff = 0
         
         # Start an infinite loop for training.
@@ -533,7 +535,7 @@ class neuron:
                 
                 forward_result = self.forward( 
                     roles = ['system', 'user' ],
-                    messages = [ base_prompt, prompt ],
+                    messages = [ self.base_prompt, prompt ],
                     topk = self.config.neuron.training_topk,
                     random_sample_uids = True,
                     train_gating_model = True,
@@ -549,7 +551,7 @@ class neuron:
                     prompt, reward_diff = self.get_question(
                         uids = forward_result.uids[idx_reward_sorted],
                         bootstrap_prompt = forward_result.best_completion, 
-                        reset_bootstrap_prompt = (steps % self.config.neuron.reset_bootstrap_prompt_frequency == 0),
+                        reset_bootstrap_prompt = (steps % self.config.neuron.reset_bootstrap_prompt_frequency == 5),
                         random_sample_uids = self.config.neuron.question_random_sample_uids
                     )
 
