@@ -494,13 +494,13 @@ class neuron:
                     bittensor.logging.info( 'weights', weights )
 
                     # Set the weights on chain via our subtensor connection.
-                    self.subtensor.set_weights(
-                        wallet = self.wallet,
-                        netuid = self.config.netuid,
-                        uids = uids,
-                        weights = weights,
-                        wait_for_finalization = False,
-                    )
+                    # self.subtensor.set_weights(
+                    #     wallet = self.wallet,
+                    #     netuid = self.config.netuid,
+                    #     uids = uids,
+                    #     weights = weights,
+                    #     wait_for_finalization = False,
+                    # )
 
                     bittensor.logging.trace('last 100 prompt history: ', prompt_history[-100:])
                     if len(prompt_history) > 100:
