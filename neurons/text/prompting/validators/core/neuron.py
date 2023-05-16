@@ -115,6 +115,7 @@ class neuron:
         parser.add_argument( '--neuron.no_reward_model', action = 'store_true', help = 'If set, we dont load the reward model instead use just the scores.', default = False )
         parser.add_argument( '--neuron.question_random_sample_uids', action = 'store_true', help = 'If set, random sample uids to get question.', default = False )
         parser.add_argument( '--neuron.reward_shift', type = int, help = 'The value to shift rewards for calculation.', default = 3 )
+        parser.add_argument( '--neuron.example_questions', type = int, help = 'The number of example questions used.', default = 3 )
 
     @classmethod
     def config ( cls ):
@@ -144,6 +145,7 @@ class neuron:
 
         # check if invoking iter() is indeed necessary
         self.dataset = iter(load_dataset('squad_v2', split='train', streaming=True).shuffle(buffer_size=10000))
+        self.question_dataset = iter(load_dataset('nq_open', split='train', streaming=True).shuffle(buffer_size=10000))
 
         self.moving_averaged_scores = torch.zeros((self.metagraph.n)).to( self.device )
         self.alpha = 0.99
@@ -312,6 +314,7 @@ class neuron:
 
         # Calculate the rewards for the successful `completions` using the reward model.
         # Print the rewards for all `uids`.`
+        flattened_message_for_reward = ''
         if not self.config.neuron.no_reward_model:
             flattened_message_for_reward = ''
             for role_i, message_i in list(zip(roles, messages)):
@@ -471,6 +474,13 @@ class neuron:
 
             if reset_bootstrap_prompt:
                 bootstrap_prompt = next(self.dataset)['context'] # google_ai_dataset_place_holder
+                
+                examples = 'Examples Questions: \n'
+                for i in range(self.config.neuron.example_questions):
+                    question = next(self.question_dataset)
+                    examples +='-' + question['question'] + '? \n'
+                
+                bootstrap_prompt = 'context: ' + bootstrap_prompt + '\n' + examples 
                 self.base_prompt = bootstrap_prompt
                 with open('prompt_history.txt', 'a') as file:
                     file.write("============== reset ==================" + '\n')
