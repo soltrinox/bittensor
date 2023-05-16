@@ -321,7 +321,7 @@ class neuron:
                 if role_i != 'system': flattened_message_for_reward += message_i.strip() + '\n'
             full_completions_for_reward = [ 'Question: ' + flattened_message_for_reward + 'Answer: ' + comp.strip() for comp in successful_completions ]
             completions_for_reward = [comp.strip() for comp in successful_completions] 
-            rewards = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True, prompt= flattened_message_for_reward, shift = self.config.neuron.reward_shift).detach().to( self.device )
+            rewards = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True, shift = self.config.neuron.reward_shift).detach().to( self.device )
             bittensor.logging.trace( 'rewards', rewards )
         else:
             rewards = scores[ successful_uids ]
@@ -501,7 +501,7 @@ class neuron:
             successful_questions = [question.completion for question in questions if question is not None and question.completion is not None and len(question.completion) > 10]
             full_completions_for_reward = [ question_prompt +'\n Question:' + comp.strip() for comp in successful_questions ]
             completions_for_reward = [comp.strip() for comp in successful_questions] 
-            reward_diffs = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True,prompt= question_prompt, shift = self.config.neuron.reward_shift).to( self.device )
+            reward_diffs = self.reward_model.reward( full_completions_for_reward, completions_for_reward, difference = True, shift = self.config.neuron.reward_shift).to( self.device )
             
             print(question_prompt)
             for question, reward_diff in zip(successful_questions, reward_diffs.tolist()):
