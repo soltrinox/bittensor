@@ -71,7 +71,8 @@ class RewardModel(nn.Module):
             return scores
         
         with torch.no_grad():
-            shift - reward_fn([prompt])
+            shift = -reward_fn([prompt])
+            print(prompt)
             print('reward shift', shift)
             full_rewards = [reward_fn([completion]) for completion in full_completions]
             if difference:
