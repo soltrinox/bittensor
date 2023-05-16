@@ -475,7 +475,7 @@ class neuron:
             if reset_bootstrap_prompt:
                 bootstrap_prompt = next(self.dataset)['context'] # google_ai_dataset_place_holder
                 
-                examples = 'Examples Questions: \n'
+                examples = 'Sample Questions: \n'
                 for i in range(self.config.neuron.example_questions):
                     question = next(self.question_dataset)
                     examples +='-' + question['question'] + '? \n'
