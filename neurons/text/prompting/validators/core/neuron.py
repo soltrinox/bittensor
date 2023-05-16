@@ -480,7 +480,7 @@ class neuron:
                     question = next(self.question_dataset)
                     examples +='-' + question['question'] + '? \n'
                 
-                bootstrap_prompt = 'context: ' + bootstrap_prompt + '\n' + examples 
+                bootstrap_prompt = examples + '\n'  + 'context: ' + bootstrap_prompt
                 self.base_prompt = bootstrap_prompt
                 with open('prompt_history.txt', 'a') as file:
                     file.write("============== reset ==================" + '\n')
