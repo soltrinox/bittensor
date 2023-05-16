@@ -76,6 +76,7 @@ def test_forward():
             ('bittensor-version',str(bittensor.__version_as_int__)),
         )
     )
+    axon.stop()
 
 
 def test_backward():
@@ -131,4 +132,4 @@ def test_backward():
             ('bittensor-version',str(bittensor.__version_as_int__)),
         )
     )
-
+    axon.stop()
